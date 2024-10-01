@@ -10,5 +10,6 @@
     <string name="welcome">Welcome!</string>
     <string name="log_out">Log Out</string>
     <string name="clinic_doctors_and_staffs">Clinic Doctors and Staffs</string>
+    <string name="medical_records">Medical Records</string>
 
 </resources>

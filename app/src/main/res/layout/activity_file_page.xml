@@ -17,7 +17,7 @@
         app:layout_constraintHorizontal_bias="0.609"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.429">
+        app:layout_constraintVertical_bias="0.358">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
@@ -72,7 +72,8 @@
             android:contentDescription="@string/home"
             android:enabled="true"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/home" />
+            app:srcCompat="@drawable/home"
+            tools:ignore="ImageContrastCheck" />
 
         <ImageButton
             android:id="@+id/fileBtn"
@@ -109,7 +110,7 @@
         android:layout_width="208dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
-        android:text="Medical Records"
+        android:text="@string/medical_records"
         android:textColor="@color/black"
         android:textSize="25sp"
         android:textStyle="bold"

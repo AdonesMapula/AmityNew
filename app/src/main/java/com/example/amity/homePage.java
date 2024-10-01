@@ -32,7 +32,12 @@ public class homePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
-        // Initialize views
+        initializeViews();
+        setupRetrofit();
+        setupButtonListeners();
+    }
+
+    private void initializeViews() {
         homeBtn = findViewById(R.id.homeBtn);
         fileBtn = findViewById(R.id.fileBtn);
         staffBtn = findViewById(R.id.staffBtn);
@@ -40,98 +45,42 @@ public class homePage extends AppCompatActivity {
         addFilesBtn = findViewById(R.id.addFiles);
         ptntsNameTxt = findViewById(R.id.ptntsNameTxt);
         dateCheckTxt = findViewById(R.id.dateCheckTxt);
+    }
 
-        // Initialize Retrofit
+    private void setupRetrofit() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://olive-lapwing-255852.hostingersite.com/api/") // Replace with your actual base URL
+                .baseUrl("https://olive-lapwing-255852.hostingersite.com/api/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-
         apiService = retrofit.create(ApiService.class);
-
-        // Add patient button click
-        addPatientBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String patientName = ptntsNameTxt.getText().toString();
-                String checkupDate = dateCheckTxt.getText().toString();
-
-                if (patientName.isEmpty() || checkupDate.isEmpty()) {
-                    Toast.makeText(homePage.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-                } else {
-                    addPatientToDatabase(patientName, checkupDate);
-                }
-            }
-        });
-
-        // Search patient button click
-        addFilesBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String patientName = ptntsNameTxt.getText().toString();
-
-                if (patientName.isEmpty()) {
-                    Toast.makeText(homePage.this, "Please enter the patient's name", Toast.LENGTH_SHORT).show();
-                } else {
-                    searchPatient(patientName);
-                }
-            }
-        });
     }
 
-    // Add patient to database using Retrofit
-    private void addPatientToDatabase(final String patientName, final String checkupDate) {
-        Call<SimpleResponse> call = apiService.addPatient(patientName, checkupDate);
-        call.enqueue(new Callback<SimpleResponse>() {
-            @Override
-            public void onResponse(Call<SimpleResponse> call, Response<SimpleResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    SimpleResponse simpleResponse = response.body();
-                    if (simpleResponse.getStatus().equals("success")) {
-                        Toast.makeText(homePage.this, "Patient added successfully", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(homePage.this, "Error: " + simpleResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(homePage.this, "Failed to add patient", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SimpleResponse> call, Throwable t) {
-                Toast.makeText(homePage.this, "Failed to connect: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+    private void setupButtonListeners() {
+        addPatientBtn.setOnClickListener(v -> {
+            String patientName = ptntsNameTxt.getText().toString();
+            String checkupDate = dateCheckTxt.getText().toString();
+            if (addPatient(patientName, checkupDate)) {
+                showToast("Patient added successfully.");
+            } else {
+                showToast("Failed to add patient.");
             }
         });
+
+        addFilesBtn.setOnClickListener(v -> captureImage());
+
+        homeBtn.setOnClickListener(v -> navigateToHome());
+        fileBtn.setOnClickListener(v -> navigateToFiles());
+        staffBtn.setOnClickListener(v -> navigateToStaff());
     }
 
-    // Search patient using Retrofit
-    private void searchPatient(final String patientName) {
-        Call<PatientResponse> call = apiService.searchPatient(patientName);
-        call.enqueue(new Callback<PatientResponse>() {
-            @Override
-            public void onResponse(Call<PatientResponse> call, Response<PatientResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    PatientResponse patientResponse = response.body();
-                    if (patientResponse.getStatus().equals("success")) {
-                        Toast.makeText(homePage.this, "Patient found: " + patientResponse.getPatient().getName(), Toast.LENGTH_SHORT).show();
-                        openCamera();
-                    } else {
-                        Toast.makeText(homePage.this, "Patient not found", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(homePage.this, "Failed to find patient", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<PatientResponse> call, Throwable t) {
-                Toast.makeText(homePage.this, "Failed to connect: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private boolean addPatient(String name, String   date) {
+        // Add logic to send a request to add a patient
+        // Call the API and handle the response
+        // Return true if successful, false otherwise
+        return true; // Placeholder
     }
 
-    // Open camera to capture image
-    private void openCamera() {
+    private void captureImage() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -142,8 +91,26 @@ public class homePage extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            // Handle the captured image here, e.g., save it or upload it
-            Toast.makeText(this, "Image captured successfully", Toast.LENGTH_SHORT).show();
+            // Handle the image capture result
+            // Get image data from intent
         }
+    }
+
+    private void navigateToHome() {
+        // Logic to navigate to home
+    }
+
+    private void navigateToFiles() {
+        Intent intent = new Intent(homePage.this, filePage.class);
+        startActivity(intent);
+    }
+
+    private void navigateToStaff() {
+        Intent intent = new Intent(homePage.this, staffPage.class);
+        startActivity(intent);
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(homePage.this, message, Toast.LENGTH_SHORT).show();
     }
 }

@@ -1,5 +1,8 @@
 package com.example.amity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -56,21 +59,35 @@ public class MainActivity extends AppCompatActivity {
 
     // Method to start the background image slideshow
     private void startSlideshow() {
-        final Runnable runnable = new Runnable() {
+        final Runnable slideshowRunnable = new Runnable() {
             @Override
             public void run() {
-                // Update the ImageView with the next image in the array
-                imageView.setImageResource(images[currentIndex]);
-                currentIndex = (currentIndex + 1) % images.length;
+                // Create a fade-out animation
+                ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
+                fadeOut.setDuration(1000); // Duration of fade out
 
-                // Set a delay of 3 seconds for the next image
-                handler.postDelayed(this, 3000);
+                fadeOut.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        // Change the image after the fade out ends
+                        imageView.setImageResource(images[currentIndex]);
+
+                        // Create a fade-in animation
+                        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
+                        fadeIn.setDuration(1000); // Duration of fade in
+                        fadeIn.start(); // Start fade in
+                    }
+                });
+
+                fadeOut.start(); // Start fade out
+
+                currentIndex = (currentIndex + 1) % images.length; // Update index
+                handler.postDelayed(this, 5000); // Schedule the next transition
             }
         };
-
-        // Start the slideshow
-        handler.post(runnable);
+        handler.post(slideshowRunnable);
     }
+
 
     @Override
     protected void onDestroy() {

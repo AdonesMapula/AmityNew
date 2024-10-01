@@ -1,9 +1,13 @@
 package com.example.amity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,6 +25,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class logInActivity extends AppCompatActivity {
 
+    private static final String TAG = "logInActivity";
+    private static final String USER_SESSION = "userSession";
+    private static final long SESSION_TIMEOUT_DURATION = 1800000; // 30 minutes
+
     private EditText logEmailInTxt, logPassInTxt;
     private Button logInBtn, signUpBtn;
     private ImageView imageView;
@@ -28,134 +36,126 @@ public class logInActivity extends AppCompatActivity {
     private int[] images = {R.drawable.bgimage, R.drawable.bgimage2, R.drawable.bgimage3};
     private int currentIndex = 0;
     private Handler handler = new Handler();
-
-    private ApiService apiService;  // Retrofit API service
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Check if session exists and is valid
         if (isLoggedIn()) {
-            Intent intent = new Intent(logInActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
+            navigateToHome();
         } else {
             setContentView(R.layout.activity_log_in);
-
-            // Initialize Retrofit
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://olive-lapwing-255852.hostingersite.com/api/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-
-            apiService = retrofit.create(ApiService.class);
-
-            // Initialize UI components
-            logEmailInTxt = findViewById(R.id.LogEmailInTxt);
-            logPassInTxt = findViewById(R.id.LogPassInTxt);
-            imageView = findViewById(R.id.imageView);
-            logInBtn = findViewById(R.id.LogInBtn);
-            signUpBtn = findViewById(R.id.SignUpBtn);
-            backButton = findViewById(R.id.backBtn);
-
-            // Start the slideshow
+            initializeUI();
+            setupRetrofit();
             startSlideshow();
-
-            // Set up click listener for Login button
-            logInBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    attemptLogin();
-                }
-            });
-
-            backButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(logInActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
-            });
-
-            // Set up click listener for Sign Up button
-            signUpBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    redirectToSignUpActivity();
-                }
-            });
+            setupButtonListeners();
         }
     }
 
+    private void initializeUI() {
+        logEmailInTxt = findViewById(R.id.LogEmailInTxt);
+        logPassInTxt = findViewById(R.id.LogPassInTxt);
+        imageView = findViewById(R.id.imageView);
+        logInBtn = findViewById(R.id.LogInBtn);
+        signUpBtn = findViewById(R.id.SignUpBtn);
+        backButton = findViewById(R.id.backBtn);
+    }
+
+    private void setupRetrofit() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://olive-lapwing-255852.hostingersite.com/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        apiService = retrofit.create(ApiService.class);
+    }
+
+    private void setupButtonListeners() {
+        logInBtn.setOnClickListener(view -> attemptLogin());
+        backButton.setOnClickListener(view -> navigateToMainActivity());
+        signUpBtn.setOnClickListener(view -> navigateToSignUp());
+    }
+
     private void startSlideshow() {
-        final Runnable runnable = new Runnable() {
+        final Runnable slideshowRunnable = new Runnable() {
             @Override
             public void run() {
-                imageView.setImageResource(images[currentIndex]);
-                currentIndex = (currentIndex + 1) % images.length;
-                handler.postDelayed(this, 3000);
+                animateImageTransition();
+                currentIndex = (currentIndex + 1) % images.length; // Update index
+                handler.postDelayed(this, 5000); // Schedule the next transition
             }
         };
-        handler.post(runnable);
+        handler.post(slideshowRunnable);
+    }
+
+    private void animateImageTransition() {
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
+        fadeOut.setDuration(1000); // Duration of fade out
+        fadeOut.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                imageView.setImageResource(images[currentIndex]); // Change the image
+                ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
+                fadeIn.setDuration(1000); // Duration of fade in
+                fadeIn.start(); // Start fade in
+            }
+        });
+        fadeOut.start(); // Start fade out
     }
 
     private void attemptLogin() {
         String email = logEmailInTxt.getText().toString().trim();
         String password = logPassInTxt.getText().toString().trim();
 
-        // Simple validation
-        if (email.isEmpty()) {
-            logEmailInTxt.setError("Email is required");
-            logEmailInTxt.requestFocus();
-            return;
-        }
+        if (!validateCredentials(email, password)) return;
 
-        if (password.isEmpty()) {
-            logPassInTxt.setError("Password is required");
-            logPassInTxt.requestFocus();
-            return;
-        }
-
-        // Make the API call using Retrofit
         Call<LoginResponse> call = apiService.loginUser(email, password);
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    LoginResponse loginResponse = response.body();
-                    if (loginResponse.getStatus().equals("success")) {
-                        Toast.makeText(logInActivity.this, loginResponse.getMessage(), Toast.LENGTH_LONG).show();
-                        saveSession(email);  // Save session details
-
-                        // Redirect to home screen
-                        Intent intent = new Intent(logInActivity.this, homePage.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        Toast.makeText(logInActivity.this, loginResponse.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                } else {
-                    Toast.makeText(logInActivity.this, "Response error: " + response.message(), Toast.LENGTH_LONG).show();
-                }
+                handleLoginResponse(response);
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-                Toast.makeText(logInActivity.this, "Login failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showToast("Login failed: " + t.getMessage());
+                Log.e(TAG, "Login error: ", t);
             }
         });
     }
 
-    private void redirectToSignUpActivity() {
-        Intent intent = new Intent(logInActivity.this, signUpActivity.class);
-        startActivity(intent);
-        Toast.makeText(logInActivity.this, "Redirecting to Sign Up page", Toast.LENGTH_SHORT).show();
+    private boolean validateCredentials(String email, String password) {
+        if (email.isEmpty()) {
+            logEmailInTxt.setError("Email is required");
+            logEmailInTxt.requestFocus();
+            return false;
+        }
+        if (password.isEmpty()) {
+            logPassInTxt.setError("Password is required");
+            logPassInTxt.requestFocus();
+            return false;
+        }
+        return true;
+    }
+
+    private void handleLoginResponse(Response<LoginResponse> response) {
+        if (response.isSuccessful() && response.body() != null) {
+            LoginResponse loginResponse = response.body();
+            Log.d(TAG, "Login Status: " + loginResponse.getStatus() + ", Message: " + loginResponse.getMessage());
+            if ("success".equals(loginResponse.getStatus())) {
+                showToast(loginResponse.getMessage());
+                saveSession(logEmailInTxt.getText().toString());
+                navigateToHome();
+            } else {
+                showToast(loginResponse.getMessage());
+            }
+        } else {
+            showToast("Response error: " + response.message());
+            Log.e(TAG, "Response error: " + response.message());
+        }
     }
 
     private void saveSession(String email) {
-        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("userEmail", email);
         editor.putLong("sessionStartTime", System.currentTimeMillis());
@@ -163,26 +163,45 @@ public class logInActivity extends AppCompatActivity {
     }
 
     private boolean isLoggedIn() {
-        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
         String userEmail = sharedPreferences.getString("userEmail", null);
         return userEmail != null && isSessionValid();
     }
 
     private boolean isSessionValid() {
-        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
         long sessionStartTime = sharedPreferences.getLong("sessionStartTime", 0);
         long currentTime = System.currentTimeMillis();
-        long sessionDuration = currentTime - sessionStartTime;
+        return (currentTime - sessionStartTime) <= SESSION_TIMEOUT_DURATION;
+    }
 
-        // Set session timeout duration (e.g., 30 minutes = 1800000 milliseconds)
-        long timeoutDuration = 1800000;
+    private void navigateToHome() {
+        Log.d(TAG, "Navigating to home page");
+        Intent intent = new Intent(logInActivity.this, homePage.class);
+        intent.putExtra("userEmail", logEmailInTxt.getText().toString());
+        startActivity(intent);
+        finish();
+    }
 
-        return sessionDuration <= timeoutDuration;
+    private void navigateToMainActivity() {
+        Intent intent = new Intent(logInActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void navigateToSignUp() {
+        Intent intent = new Intent(logInActivity.this, signUpActivity.class);
+        startActivity(intent);
+        showToast("Redirecting to Sign Up page");
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(logInActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacksAndMessages(null);  // Stop the handler when activity is destroyed
+        handler.removeCallbacksAndMessages(null);  // Stop slideshow handler when activity is destroyed
     }
 }
