@@ -9,19 +9,30 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     private static final String BASE_URL = "https://olive-lapwing-255852.hostingersite.com/api/";
-    private static Retrofit retrofit = null;
+    private static Retrofit retrofitInstance;
 
+    // Create a Gson object with lenient parsing for slightly malformed JSON
     private static final Gson gson = new GsonBuilder()
             .setLenient()
             .create();
 
-    public static Retrofit getRetrofitInstance() {
-        if (retrofit == null) {
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .build();
+    // Private constructor to prevent instantiation
+    private RetrofitClient() {
+        // Empty constructor to prevent instantiation
+    }
+
+    // Get the Retrofit instance (Singleton pattern)
+    public static Retrofit getInstance() {
+        if (retrofitInstance == null) {
+            synchronized (RetrofitClient.class) {  // Thread-safe singleton
+                if (retrofitInstance == null) {   // Double-check locking
+                    retrofitInstance = new Retrofit.Builder()
+                            .baseUrl(BASE_URL)
+                            .addConverterFactory(GsonConverterFactory.create(gson))
+                            .build();
+                }
+            }
         }
-        return retrofit;
+        return retrofitInstance;
     }
 }

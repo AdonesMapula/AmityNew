@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -15,6 +14,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.IOException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,9 +29,10 @@ public class logInActivity extends AppCompatActivity {
     private Button logInBtn, signUpBtn;
     private ImageView imageView;
     private ImageButton backButton;
-    private int[] images = {R.drawable.bgimage, R.drawable.bgimage2, R.drawable.bgimage3};
+
+    private final int[] images = {R.drawable.bgimage, R.drawable.bgimage2, R.drawable.bgimage3};
     private int currentIndex = 0;
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler();
     private ApiService apiService;
 
     @Override
@@ -38,7 +40,7 @@ public class logInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         if (isLoggedIn()) {
-            navigateToHome();
+            navigateToActivity(homePage.class);
         } else {
             setContentView(R.layout.activity_log_in);
             initializeUI();
@@ -67,40 +69,36 @@ public class logInActivity extends AppCompatActivity {
 
     private void setupButtonListeners() {
         logInBtn.setOnClickListener(view -> attemptLogin());
-        backButton.setOnClickListener(view -> navigateToMainActivity());
-        signUpBtn.setOnClickListener(view -> navigateToSignUp());
+        backButton.setOnClickListener(view -> navigateToActivity(MainActivity.class));
+        signUpBtn.setOnClickListener(view -> navigateToActivity(signUpActivity.class, "Redirecting to Sign Up page"));
     }
 
     private void startSlideshow() {
         final Runnable slideshowRunnable = new Runnable() {
             @Override
             public void run() {
-                // Create a fade-out animation
-                ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
-                fadeOut.setDuration(1000); // Duration of fade out
-
-                fadeOut.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        // Change the image after the fade out ends
-                        imageView.setImageResource(images[currentIndex]);
-
-                        // Create a fade-in animation
-                        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
-                        fadeIn.setDuration(1000); // Duration of fade in
-                        fadeIn.start(); // Start fade in
-                    }
-                });
-
-                fadeOut.start(); // Start fade out
-
-                currentIndex = (currentIndex + 1) % images.length; // Update index
-                handler.postDelayed(this, 5000); // Schedule the next transition
+                fadeImage(imageView);
+                currentIndex = (currentIndex + 1) % images.length;
+                handler.postDelayed(this, 5000);
             }
         };
         handler.post(slideshowRunnable);
     }
 
+    private void fadeImage(ImageView imageView) {
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
+        fadeOut.setDuration(1000);
+        fadeOut.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                imageView.setImageResource(images[currentIndex]);
+                ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
+                fadeIn.setDuration(1000);
+                fadeIn.start();
+            }
+        });
+        fadeOut.start();
+    }
 
     private void attemptLogin() {
         String email = logEmailInTxt.getText().toString().trim();
@@ -128,7 +126,6 @@ public class logInActivity extends AppCompatActivity {
             logEmailInTxt.requestFocus();
             return false;
         }
-
         if (password.isEmpty()) {
             logPassInTxt.setError("Password is required");
             logPassInTxt.requestFocus();
@@ -143,12 +140,20 @@ public class logInActivity extends AppCompatActivity {
             if ("success".equals(loginResponse.getStatus())) {
                 showToast(loginResponse.getMessage());
                 saveSession(logEmailInTxt.getText().toString());
-                navigateToHome();
+                navigateToActivity(homePage.class); // Corrected navigation to homePage
             } else {
                 showToast(loginResponse.getMessage());
             }
         } else {
-            showToast("Response error: " + response.message());
+            String errorMessage = "Unknown error";
+            try {
+                if (response.errorBody() != null) {
+                    errorMessage = response.errorBody().string();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            showToast("Error: " + errorMessage);
         }
     }
 
@@ -169,31 +174,18 @@ public class logInActivity extends AppCompatActivity {
     private boolean isSessionValid() {
         SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
         long sessionStartTime = sharedPreferences.getLong("sessionStartTime", 0);
-        long currentTime = System.currentTimeMillis();
-        long sessionDuration = currentTime - sessionStartTime;
-
-        long timeoutDuration = 1800000;  // 30 minutes
+        long sessionDuration = System.currentTimeMillis() - sessionStartTime;
+        long timeoutDuration = 1800000; // 30 minutes
         return sessionDuration <= timeoutDuration;
     }
 
-    private void navigateToHome() {
-        Intent intent = new Intent(logInActivity.this, homePage.class);
-        intent.putExtra("userEmail", logEmailInTxt.getText().toString());
+    private void navigateToActivity(Class<?> activityClass, String... message) {
+        if (message.length > 0) {
+            showToast(message[0]);
+        }
+        Intent intent = new Intent(logInActivity.this, activityClass);
         startActivity(intent);
         finish();
-
-    }
-
-    private void navigateToMainActivity() {
-        Intent intent = new Intent(logInActivity.this, MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void navigateToSignUp() {
-        Intent intent = new Intent(logInActivity.this, signUpActivity.class);
-        startActivity(intent);
-        showToast("Redirecting to Sign Up page");
     }
 
     private void showToast(String message) {
@@ -203,6 +195,6 @@ public class logInActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        handler.removeCallbacksAndMessages(null);  // Stop slideshow handler when activity is destroyed
+        handler.removeCallbacksAndMessages(null);
     }
 }

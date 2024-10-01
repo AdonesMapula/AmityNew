@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class signUpActivity extends AppCompatActivity {
 
@@ -52,7 +53,8 @@ public class signUpActivity extends AppCompatActivity {
         startSlideshow();
 
         // Initialize Retrofit
-        apiService = RetrofitClient.getRetrofitInstance().create(ApiService.class);
+        Retrofit retrofit = RetrofitClient.getInstance();
+
 
         // Sign Up button listener
         signUpButton.setOnClickListener(new View.OnClickListener() {
