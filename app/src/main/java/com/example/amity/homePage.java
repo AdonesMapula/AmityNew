@@ -1,8 +1,11 @@
 package com.example.amity;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,6 +14,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.io.ByteArrayOutputStream;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -74,9 +79,6 @@ public class homePage extends AppCompatActivity {
     }
 
     private boolean addPatient(String name, String   date) {
-        // Add logic to send a request to add a patient
-        // Call the API and handle the response
-        // Return true if successful, false otherwise
         return true; // Placeholder
     }
 
@@ -91,10 +93,42 @@ public class homePage extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            // Handle the image capture result
-            // Get image data from intent
+            // Get the image captured by the camera
+            Bundle extras = data.getExtras();
+            if (extras != null) {
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                uploadImage(imageBitmap);
+            }
         }
     }
+
+    private void uploadImage(Bitmap bitmap) {
+        // Convert Bitmap to Base64
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        String encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+        Call<ImageUploadResponse> call = apiService.uploadImage(encodedImage);
+        call.enqueue(new Callback<ImageUploadResponse>() {
+            @Override
+            public void onResponse(Call<ImageUploadResponse> call, Response<ImageUploadResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    showToast("Image uploaded successfully: " + response.body().getMessage());
+                } else {
+                    showToast("Upload failed: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ImageUploadResponse> call, Throwable t) {
+                showToast("Upload error: " + t.getMessage());
+                Log.e("ImageUpload", "Error uploading image: ", t);
+            }
+        });
+    }
+
+
 
     private void navigateToHome() {
         // Logic to navigate to home

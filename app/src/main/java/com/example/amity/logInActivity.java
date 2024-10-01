@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,10 +24,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class logInActivity extends AppCompatActivity {
 
-    private static final String TAG = "logInActivity";
-    private static final String USER_SESSION = "userSession";
-    private static final long SESSION_TIMEOUT_DURATION = 1800000; // 30 minutes
-
     private EditText logEmailInTxt, logPassInTxt;
     private Button logInBtn, signUpBtn;
     private ImageView imageView;
@@ -41,6 +36,7 @@ public class logInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if (isLoggedIn()) {
             navigateToHome();
         } else {
@@ -79,7 +75,25 @@ public class logInActivity extends AppCompatActivity {
         final Runnable slideshowRunnable = new Runnable() {
             @Override
             public void run() {
-                animateImageTransition();
+                // Create a fade-out animation
+                ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
+                fadeOut.setDuration(1000); // Duration of fade out
+
+                fadeOut.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        // Change the image after the fade out ends
+                        imageView.setImageResource(images[currentIndex]);
+
+                        // Create a fade-in animation
+                        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
+                        fadeIn.setDuration(1000); // Duration of fade in
+                        fadeIn.start(); // Start fade in
+                    }
+                });
+
+                fadeOut.start(); // Start fade out
+
                 currentIndex = (currentIndex + 1) % images.length; // Update index
                 handler.postDelayed(this, 5000); // Schedule the next transition
             }
@@ -87,20 +101,6 @@ public class logInActivity extends AppCompatActivity {
         handler.post(slideshowRunnable);
     }
 
-    private void animateImageTransition() {
-        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(imageView, "alpha", 1f, 0f);
-        fadeOut.setDuration(1000); // Duration of fade out
-        fadeOut.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                imageView.setImageResource(images[currentIndex]); // Change the image
-                ObjectAnimator fadeIn = ObjectAnimator.ofFloat(imageView, "alpha", 0f, 1f);
-                fadeIn.setDuration(1000); // Duration of fade in
-                fadeIn.start(); // Start fade in
-            }
-        });
-        fadeOut.start(); // Start fade out
-    }
 
     private void attemptLogin() {
         String email = logEmailInTxt.getText().toString().trim();
@@ -118,7 +118,6 @@ public class logInActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 showToast("Login failed: " + t.getMessage());
-                Log.e(TAG, "Login error: ", t);
             }
         });
     }
@@ -129,6 +128,7 @@ public class logInActivity extends AppCompatActivity {
             logEmailInTxt.requestFocus();
             return false;
         }
+
         if (password.isEmpty()) {
             logPassInTxt.setError("Password is required");
             logPassInTxt.requestFocus();
@@ -140,7 +140,6 @@ public class logInActivity extends AppCompatActivity {
     private void handleLoginResponse(Response<LoginResponse> response) {
         if (response.isSuccessful() && response.body() != null) {
             LoginResponse loginResponse = response.body();
-            Log.d(TAG, "Login Status: " + loginResponse.getStatus() + ", Message: " + loginResponse.getMessage());
             if ("success".equals(loginResponse.getStatus())) {
                 showToast(loginResponse.getMessage());
                 saveSession(logEmailInTxt.getText().toString());
@@ -150,12 +149,11 @@ public class logInActivity extends AppCompatActivity {
             }
         } else {
             showToast("Response error: " + response.message());
-            Log.e(TAG, "Response error: " + response.message());
         }
     }
 
     private void saveSession(String email) {
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("userEmail", email);
         editor.putLong("sessionStartTime", System.currentTimeMillis());
@@ -163,24 +161,27 @@ public class logInActivity extends AppCompatActivity {
     }
 
     private boolean isLoggedIn() {
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
         String userEmail = sharedPreferences.getString("userEmail", null);
         return userEmail != null && isSessionValid();
     }
 
     private boolean isSessionValid() {
-        SharedPreferences sharedPreferences = getSharedPreferences(USER_SESSION, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences("userSession", MODE_PRIVATE);
         long sessionStartTime = sharedPreferences.getLong("sessionStartTime", 0);
         long currentTime = System.currentTimeMillis();
-        return (currentTime - sessionStartTime) <= SESSION_TIMEOUT_DURATION;
+        long sessionDuration = currentTime - sessionStartTime;
+
+        long timeoutDuration = 1800000;  // 30 minutes
+        return sessionDuration <= timeoutDuration;
     }
 
     private void navigateToHome() {
-        Log.d(TAG, "Navigating to home page");
         Intent intent = new Intent(logInActivity.this, homePage.class);
         intent.putExtra("userEmail", logEmailInTxt.getText().toString());
         startActivity(intent);
         finish();
+
     }
 
     private void navigateToMainActivity() {

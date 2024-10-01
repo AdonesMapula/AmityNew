@@ -133,7 +133,6 @@ public class signUpActivity extends AppCompatActivity {
             return;
         }
 
-        // Make the API call using Retrofit
         Call<RegisterResponse> call = apiService.registerUser(username, email, password);
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
