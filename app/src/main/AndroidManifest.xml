@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.amity">
+
+    <!-- Permissions -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/icon"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
+        <!-- Launcher Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Login and Sign Up Activities -->
+        <activity android:name=".logInActivity" android:exported="false" />
+        <activity android:name=".signUpActivity" android:exported="false" />
+
+        <!-- Home Page Activity with soft input handling -->
+        <activity
+            android:name=".homePage"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <!-- Other Activities -->
+        <activity android:name=".staffPage" android:exported="false" />
+        <activity android:name=".filePage" android:exported="false" />
+
+    </application>
+
+</manifest>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main2"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".signUpActivity">
+
+    <!-- Background Slideshow ImageView -->
+
+    <ImageView
+        android:id="@+id/backgroundImageView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/bgimage" />
+    <!-- Sign Up Button -->
+    <Button
+        android:id="@+id/SignUpSubmitBtn"
+        android:background="@drawable/edittext_shadow"
+        android:layout_width="169dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="64dp"
+        android:backgroundTint="#0064F7"
+        android:text="Sign Up"
+        android:textSize="20dp"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Logo ImageView -->
+
+    <!-- Username EditText -->
+
+    <!-- Email EditText -->
+
+    <ImageView
+        android:id="@+id/LogoLogIn"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginTop="104dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/logo" />
+
+    <EditText
+        android:id="@+id/UserNameReg"
+        android:layout_width="320dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edittext_shadow"
+        android:backgroundTint="#FFFFFF"
+        android:ems="10"
+        android:hint="     UserName"
+        android:inputType="textPersonName"
+        android:minHeight="48dp"
+        android:textColorHint="#000B54"
+        app:layout_constraintBottom_toTopOf="@id/EmailAddReg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/LogoLogIn" />
+
+    <!-- Password EditText -->
+    <EditText
+        android:id="@+id/EmailAddReg"
+        android:layout_width="320dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edittext_shadow"
+        android:backgroundTint="#FFFFFF"
+        android:ems="10"
+        android:hint="     Email"
+        android:inputType="textEmailAddress"
+        android:minHeight="48dp"
+        android:textColorHint="#000B54"
+        app:layout_constraintBottom_toTopOf="@id/UserPassReg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/UserNameReg" />
+
+    <!-- Back Button -->
+    <EditText
+        android:id="@+id/UserPassReg"
+        android:layout_width="320dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edittext_shadow"
+        android:backgroundTint="#FFFFFF"
+        android:drawableTint="#000B54"
+        android:ems="10"
+        android:hint="     Password"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:textColorHint="#000B54"
+        app:layout_constraintBottom_toTopOf="@id/SignUpSubmitBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/EmailAddReg" />
+
+    <ImageButton
+        android:id="@+id/backBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:contentDescription="@string/Back"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.041"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.022"
+        app:srcCompat="@drawable/back"
+        tools:ignore="TouchTargetSizeCheck" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,14 @@
+<resources>
+    <string name="Back">Go back</string>
+    <string name="app_name">AmityMC</string>
+    <string name="AmityMC">AmityMc\n</string>
+    <string name="home">home\n</string>
+    <string name="file">file\n</string>
+    <string name="staff">staffs</string>
+    <string name="add_files">Add Files</string>
+    <string name="add_patient">Add Patient</string>
+    <string name="welcome">Welcome!</string>
+    <string name="log_out">Log Out</string>
+    <string name="clinic_doctors_and_staffs">Clinic Doctors and Staffs</string>
+
+</resources>
