@@ -1,6 +1,7 @@
 package com.example.amity;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -20,12 +21,8 @@ public interface ApiService {
     );
 
     @FormUrlEncoded
-    @POST("login.php")
-    // Login user
-    Call<LoginResponse> loginUser(
-            @Field("email") String email,
-            @Field("password") String password
-    );
+    @POST("login")
+    Call<LoginResponse> loginUser(@Body LoginRequest loginRequest);
 
     // Register a patient
     @FormUrlEncoded
